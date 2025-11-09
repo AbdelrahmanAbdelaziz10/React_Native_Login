@@ -9,15 +9,57 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
 
 export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [passWord, setPassWord] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(""); //  Error message state
 
-  const handleLogin = () => {
-    navigation.replace("Home");
+  const handleLogin = async () => {
+    //  Check if empty fields
+    if (!userName.trim() || !passWord.trim()) {
+      setErrorMessage(" Please enter your userName and passWord");
+      return;
+    }
+
+    setErrorMessage(""); // clear previous errors
+    setLoading(true);
+
+    try {
+      const apiUrl = `http://192.168.0.73:9080/maxrest/oslc/os/PORTALUSER?lean=1&oslc.select=*&oslc.where=user.LOGINID="${userName}"&_lid=${userName}&_lpwd=${passWord}`;
+
+      const response = await fetch(apiUrl, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Login response:", data);
+
+      if (data && data.member && data.member.length > 0) {
+        setErrorMessage(""); // clear error
+        navigation.replace("Home");
+      } else {
+        setErrorMessage(" Username or password is incorrect.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setErrorMessage(" Username or password is incorrect.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -40,6 +82,10 @@ export default function LoginScreen({ navigation }) {
         <Text style={styles.headerText}>Welcome to Maximo 👋</Text>
         <Text style={styles.subHeaderText}>Sign in to continue</Text>
       </LinearGradient>
+      {/* 🟥 Error message (Dynamic) */}
+      {errorMessage ? (
+        <Text style={styles.errorText}>{errorMessage}</Text>
+      ) : null}
 
       {/* ===== Form Section ===== */}
       <View style={styles.formContainer}>
@@ -55,6 +101,11 @@ export default function LoginScreen({ navigation }) {
             style={styles.input}
             placeholder="Username"
             placeholderTextColor="#888"
+            onChangeText={(text) => {
+              setUserName(text);
+              setErrorMessage("");
+            }}
+            autoCapitalize="none"
           />
         </View>
 
@@ -71,6 +122,11 @@ export default function LoginScreen({ navigation }) {
             placeholder="Password"
             secureTextEntry={!showPassword}
             placeholderTextColor="#888"
+            onChangeText={(text) => {
+              setPassWord(text);
+              setErrorMessage("");
+            }}
+            autoCapitalize="none"
           />
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <MaterialIcons
@@ -87,25 +143,30 @@ export default function LoginScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Sign In Button */}
-        <TouchableOpacity onPress={handleLogin} activeOpacity={0.8}>
-          <LinearGradient
-            colors={["#063776", "#0958b1"]}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Sign In</Text>
+        <TouchableOpacity
+          onPress={handleLogin}
+          activeOpacity={0.8}
+          disabled={loading}
+        >
+          <LinearGradient colors={["#063776", "#0958b1"]} style={styles.button}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
           </LinearGradient>
         </TouchableOpacity>
 
         {/* Sign Up */}
         <Text style={styles.bottomText}>
-          Don’t have an account?{" "}
-          <Text style={styles.signUpText}>Sign Up</Text>
+          Don’t have an account? <Text style={styles.signUpText}>Sign Up</Text>
         </Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
+// ===== Styles =====
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -162,6 +223,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: "#063776",
     fontSize: 16,
+  },
+  errorText: {
+    color: "red",
+    fontSize: 14,
+    marginTop:20,
+    textAlign: "center",
   },
   forgotText: {
     color: "#0958b1",
