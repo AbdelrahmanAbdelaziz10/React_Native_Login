@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
+  SafeAreaView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
@@ -18,7 +19,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView  style={styles.container}>
       {/* ===== Top Header + Menu ===== */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
@@ -116,7 +117,7 @@ export default function HomeScreen({ navigation }) {
           style={styles.floatingButton}
           onPress={() => setShowModal(true)}
         >
-          <MaterialIcons name="add" size={34} color="#fff" />
+          <MaterialIcons name="add" size={34} color="#fff" style={styles.addIcon} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navButton} onPress={() => setActiveTab("SR")}>
@@ -166,7 +167,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView >
   );
 }
 
@@ -176,7 +177,7 @@ const styles = StyleSheet.create({
 
   /* Header */
 header: {
-  paddingTop: 25,
+  paddingTop: 20,
   paddingHorizontal: 20,
   paddingBottom: 15,
   backgroundColor: "#063776",
@@ -246,7 +247,7 @@ menuBox: {
     borderWidth: 2,
   },
 
-  partitionTitle: { fontSize: 16, fontWeight: "600", color: "#063776" },
+  partitionTitle: { fontSize: 14, fontWeight: "700", color: "#063776" },
   partitionNumber: { marginTop: 6, fontSize: 22, fontWeight: "700" },
 
   /* Content */
@@ -275,8 +276,8 @@ menuBox: {
 
   /* Floating Create Button */
   floatingButton: {
-    width: 65,
-    height: 65,
+    width: 45,
+    height: 45,
     backgroundColor: "#063776",
     borderRadius: 40,
     justifyContent: "center",
@@ -301,7 +302,7 @@ menuBox: {
     alignItems: "center",
   },
 
-  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 15 },
+  modalTitle: { fontSize:17, fontWeight: "700", marginBottom: 15 },
 
   modalButton: {
     width: "100%",
@@ -313,6 +314,6 @@ menuBox: {
 
   modalButtonText: { color: "#fff", fontSize: 16, textAlign: "center" },
 
-  cancelButton: { marginTop: 10 },
-  cancelText: { color: "#333", fontSize: 14 },
+  cancelButton: { marginTop: 10},
+  cancelText: { fontSize: 16 , color: "#ff0000" , fontWeight:"600" },
 });
