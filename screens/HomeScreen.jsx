@@ -6,10 +6,105 @@ import {
   StyleSheet,
   Modal,
   SafeAreaView,
+  FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import RequestCard from "./../Components/RequestCard";
 
 export default function HomeScreen({ navigation }) {
+  const tableDataSR = [
+    {
+      id: 1,
+      SR_ID: "SR-12",
+      status: "Open",
+      type: "SR",
+      date: "2025-01-01",
+      summary: "يشتكي العميل من ان التكيف بارد جدا	",
+      Department: "MECH",
+    },
+    {
+      id: 2,
+      SR_ID: "SR-13",
+      status: "Closed",
+      type: "WO",
+      date: "2025-01-02",
+      summary: "فصل نظام ال UPS في كلاستر السعداء لتسليم النظام للاستشاري	",
+      Department: "ELEC",
+    },
+    {
+      id: 3,
+      SR_ID: "SR-14",
+      status: "INPROG",
+      type: "SR",
+      date: "2025-01-03",
+      summary: "اسبوت به اضطراب في الاناره في جناح الوزير	",
+      Department: "ELEC",
+    },
+    {
+      id: 4,
+      SR_ID: "SR-15",
+      status: "Open",
+      type: "WO",
+      date: "2025-01-04",
+      summary: "بطاريات لا تعمل في لوحه Esi Check	",
+      Department: "ELEC",
+    },
+    {
+      id: 5,
+      SR_ID: "SR-16",
+      status: "Rejected",
+      type: "SR",
+      date: "2025-01-05",
+      summary: "انقطاع التيار عن لوحه ELP-L2B-Serv	",
+      Department: "ELEC",
+    },
+    {
+      id: 6,
+      SR_ID: "SR-17",
+      status: "Open",
+      type: "SR",
+      date: "2025-01-01",
+      summary: "يشتكي العميل من ان التكيف بارد جدا	",
+      Department: "MECH",
+    },
+    {
+      id: 7,
+      SR_ID: "SR-18",
+      status: "Closed",
+      type: "WO",
+      date: "2025-01-02",
+      summary: "فصل نظام ال UPS في كلاستر السعداء لتسليم النظام للاستشاري	",
+      Department: "ELEC",
+    },
+    {
+      id: 8,
+      SR_ID: "SR-19",
+      status: "INPROG",
+      type: "SR",
+      date: "2025-01-03",
+      summary: "اسبوت به اضطراب في الاناره في جناح الوزير	",
+      Department: "ELEC",
+    },
+    {
+      id: 9,
+      SR_ID: "SR-20",
+      status: "Open",
+      type: "WO",
+      date: "2025-01-04",
+      summary: "بطاريات لا تعمل في لوحه Esi Check	",
+      Department: "ELEC",
+    },
+    {
+      id: 10,
+      SR_ID: "SR-21",
+      status: "Rejected",
+      type: "SR",
+      date: "2025-01-05",
+      summary: "انقطاع التيار عن لوحه ELP-L2B-Serv	",
+      Department: "ELEC",
+    },
+  ];
+
   const [activeTab, setActiveTab] = useState("WO");
   const [showModal, setShowModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -19,7 +114,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView  style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* ===== Top Header + Menu ===== */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
@@ -75,8 +170,22 @@ export default function HomeScreen({ navigation }) {
           ]}
           onPress={() => setActiveTab("WO")}
         >
-          <Text style={styles.partitionTitle}>Work Orders</Text>
-          <Text style={styles.partitionNumber}>24</Text>
+          <Text
+            style={[
+              styles.partitionTitle,
+              activeTab === "WO" && styles.activePartitionTitle,
+            ]}
+          >
+            Work Orders
+          </Text>
+          <Text
+            style={[
+              styles.partitionNumber,
+              activeTab === "WO" && styles.activePartitionNumber,
+            ]}
+          >
+            24
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -86,8 +195,22 @@ export default function HomeScreen({ navigation }) {
           ]}
           onPress={() => setActiveTab("SR")}
         >
-          <Text style={styles.partitionTitle}>Service Requests</Text>
-          <Text style={styles.partitionNumber}>18</Text>
+          <Text
+            style={[
+              styles.partitionTitle,
+              activeTab === "SR" && styles.activePartitionTitle,
+            ]}
+          >
+            Service Requests
+          </Text>
+          <Text
+            style={[
+              styles.partitionNumber,
+              activeTab === "SR" && styles.activePartitionNumber,
+            ]}
+          >
+            18
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -96,19 +219,29 @@ export default function HomeScreen({ navigation }) {
         {activeTab === "WO" ? (
           <Text style={styles.contentText}>Work Orders Content Here</Text>
         ) : (
-          <Text style={styles.contentText}>Service Requests Content Here</Text>
+          <FlatList
+            data={tableDataSR}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => <RequestCard item={item} />}
+            contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
+          />
         )}
       </View>
 
       {/* ===== Bottom Navigation ===== */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => setActiveTab("WO")}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => setActiveTab("WO")}
+        >
           <MaterialIcons
             name="build"
             size={28}
             color={activeTab === "WO" ? "#063776" : "#999"}
           />
-          <Text style={[styles.navText, activeTab === "WO" && styles.navTextActive]}>
+          <Text
+            style={[styles.navText, activeTab === "WO" && styles.navTextActive]}
+          >
             Work Orders
           </Text>
         </TouchableOpacity>
@@ -117,16 +250,26 @@ export default function HomeScreen({ navigation }) {
           style={styles.floatingButton}
           onPress={() => setShowModal(true)}
         >
-          <MaterialIcons name="add" size={34} color="#fff" style={styles.addIcon} />
+          <MaterialIcons
+            name="add"
+            size={34}
+            color="#fff"
+            style={styles.addIcon}
+          />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navButton} onPress={() => setActiveTab("SR")}>
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => setActiveTab("SR")}
+        >
           <MaterialIcons
             name="assignment"
             size={28}
             color={activeTab === "SR" ? "#063776" : "#999"}
           />
-          <Text style={[styles.navText, activeTab === "SR" && styles.navTextActive]}>
+          <Text
+            style={[styles.navText, activeTab === "SR" && styles.navTextActive]}
+          >
             Service Requests
           </Text>
         </TouchableOpacity>
@@ -167,7 +310,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </SafeAreaView >
+    </SafeAreaView>
   );
 }
 
@@ -176,43 +319,42 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f6fa" },
 
   /* Header */
-header: {
-  paddingTop: 20,
-  paddingHorizontal: 20,
-  paddingBottom: 15,
-  backgroundColor: "#063776",
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  elevation: 0,      // ❗ عطل تأثير الرفع
-  zIndex: 1, 
-  marginBottom:30,        // ❗ خلّيه تحت المنيو
-},
-
+  header: {
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
+    backgroundColor: "#063776",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 0, // ❗ عطل تأثير الرفع
+    zIndex: 1,
+    marginBottom: 30, // ❗ خلّيه تحت المنيو
+  },
 
   headerTitle: {
     fontSize: 22,
     fontWeight: "700",
     // color: "#063776",
-    color:"#fff",
+    color: "#fff",
   },
 
   /* Dropdown Menu */
-menuBox: {
-  position: "absolute",
-  right: 20,
-  top: 80,
-  width: 180,
-  backgroundColor: "#fff",   // غامق مودرن
-  borderRadius: 12,
-  paddingVertical: 8,
-  zIndex: 99999,                // أعلى من أي شيء
-  elevation: 50,                // أعلى Priority على أندرويد
-  boxShadowColor: "#000",
-  boxShadowOpacity: 0.35,
-  boxShadowRadius: 10,
-  boxShadowOffset: { width: 0, height: 4 },
-},
+  menuBox: {
+    position: "absolute",
+    right: 20,
+    top: 80,
+    width: 180,
+    backgroundColor: "#fff", // غامق مودرن
+    borderRadius: 12,
+    paddingVertical: 8,
+    zIndex: 99999, // أعلى من أي شيء
+    elevation: 50, // أعلى Priority على أندرويد
+    boxShadowColor: "#000",
+    boxShadowOpacity: 0.35,
+    boxShadowRadius: 10,
+    boxShadowOffset: { width: 0, height: 4 },
+  },
   menuItem: {
     flexDirection: "row",
     padding: 12,
@@ -234,21 +376,39 @@ menuBox: {
 
   partition: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#063776",
     padding: 20,
     borderRadius: 15,
     marginHorizontal: 5,
     alignItems: "center",
     elevation: 3,
+    color: "#fff",
   },
 
   activePartition: {
     borderColor: "#063776",
     borderWidth: 2,
+    backgroundColor: "#fff",
+    color: "#063776",
   },
-
-  partitionTitle: { fontSize: 14, fontWeight: "700", color: "#063776" },
-  partitionNumber: { marginTop: 6, fontSize: 22, fontWeight: "700" },
+  partitionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#063776",
+    color: "#fff",
+  },
+  activePartitionTitle: {
+    color: "#063776",
+  },
+  activePartitionNumber: {
+    color: "#063776",
+  },
+  partitionNumber: {
+    marginTop: 6,
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#fff",
+  },
 
   /* Content */
   content: {
@@ -302,7 +462,7 @@ menuBox: {
     alignItems: "center",
   },
 
-  modalTitle: { fontSize:17, fontWeight: "700", marginBottom: 15 },
+  modalTitle: { fontSize: 17, fontWeight: "700", marginBottom: 15 },
 
   modalButton: {
     width: "100%",
@@ -314,6 +474,6 @@ menuBox: {
 
   modalButtonText: { color: "#fff", fontSize: 16, textAlign: "center" },
 
-  cancelButton: { marginTop: 10},
-  cancelText: { fontSize: 16 , color: "#ff0000" , fontWeight:"600" },
+  cancelButton: { marginTop: 10 },
+  cancelText: { fontSize: 16, color: "#ff0000", fontWeight: "600" },
 });
