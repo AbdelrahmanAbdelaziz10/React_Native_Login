@@ -21,6 +21,7 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(""); //  Error message state
 
+<<<<<<< HEAD
   const handleLogin = async () => {
     //  Check if empty fields
     if (!userName.trim() || !passWord.trim()) {
@@ -65,6 +66,54 @@ export default function LoginScreen({ navigation }) {
 // const handleLogin2 =()=>{
 //           navigation.replace("Home");
 // }
+=======
+  // const handleLogin = async () => {
+  //   //  Check if empty fields
+  //   if (!userName.trim() || !passWord.trim()) {
+  //     setErrorMessage(" Please enter your userName and passWord");
+  //     return;
+  //   }
+
+  //   setErrorMessage(""); // clear previous errors
+  //   setLoading(true);
+
+  //   try {
+  //     const apiUrl = `http://192.168.0.73:9080/maxrest/oslc/os/PORTALUSER?lean=1&oslc.select=*&oslc.where=user.LOGINID="${userName}"&_lid=${userName}&_lpwd=${passWord}`;
+
+  //     const response = await fetch(apiUrl, {
+  //       method: "GET",
+  //       headers: {
+  //         Accept: "application/json",
+  //       },
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error(`Server error: ${response.status}`);
+  //     }
+
+  //     const data = await response.json();
+  //     console.log("Login response:", data);
+
+  //     if (data && data.member && data.member.length > 0) {
+  //       setErrorMessage(""); // clear error
+  //       navigation.replace("Home");
+  //     } else {
+  //       setErrorMessage(" Username or password is incorrect.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Login error:", error);
+  //     setErrorMessage(" Username or password is incorrect.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const handleLogin2 = () => {
+      navigation.replace("Home");
+};
+
+
+>>>>>>> 52dcedd ( Make Edit in the home page design)
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -147,7 +196,11 @@ export default function LoginScreen({ navigation }) {
 
         {/* Sign In Button */}
         <TouchableOpacity
+<<<<<<< HEAD
           onPress={handleLogin}
+=======
+          onPress={handleLogin2}
+>>>>>>> 52dcedd ( Make Edit in the home page design)
           activeOpacity={0.8}
           disabled={loading}
         >

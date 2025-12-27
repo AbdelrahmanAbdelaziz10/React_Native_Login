@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -7,185 +7,221 @@ import {
   Modal,
   SafeAreaView,
   FlatList,
+  TextInput,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import RequestCard from "./../Components/RequestCard";
+
+const PAGE_SIZE = 5;
 
 export default function HomeScreen({ navigation }) {
-  const tableDataSR = [
+  /* ================= Data ================= */
+
+  const workOrders = [
     {
-      id: 1,
-      SR_ID: "SR-12",
-      status: "Open",
-      type: "SR",
-      date: "2025-01-01",
-      summary: "يشتكي العميل من ان التكيف بارد جدا	",
-      Department: "MECH",
+      id: "WO-6453",
+      status: "ACTIVE",
+      createdAt: "2025-05-27 15:38",
+      asset: "EXFA-015",
+      location: "02-TRAF-F061",
+      department: "MECH HVAC",
+      description: "مشكله في ماسورة الصرف",
     },
     {
-      id: 2,
-      SR_ID: "SR-13",
-      status: "Closed",
-      type: "WO",
-      date: "2025-01-02",
-      summary: "فصل نظام ال UPS في كلاستر السعداء لتسليم النظام للاستشاري	",
-      Department: "ELEC",
-    },
-    {
-      id: 3,
-      SR_ID: "SR-14",
+      id: "WO-6454",
       status: "INPROG",
-      type: "SR",
-      date: "2025-01-03",
-      summary: "اسبوت به اضطراب في الاناره في جناح الوزير	",
-      Department: "ELEC",
+      createdAt: "2025-05-28 10:20",
+      asset: "EXFA-022",
+      location: "02-TRAF-F070",
+      department: "MECH HVAC",
+      description: "Mechanical HVAC",
     },
     {
-      id: 4,
-      SR_ID: "SR-15",
-      status: "Open",
-      type: "WO",
-      date: "2025-01-04",
-      summary: "بطاريات لا تعمل في لوحه Esi Check	",
-      Department: "ELEC",
-    },
-    {
-      id: 5,
-      SR_ID: "SR-16",
-      status: "Rejected",
-      type: "SR",
-      date: "2025-01-05",
-      summary: "انقطاع التيار عن لوحه ELP-L2B-Serv	",
-      Department: "ELEC",
-    },
-    {
-      id: 6,
-      SR_ID: "SR-17",
-      status: "Open",
-      type: "SR",
-      date: "2025-01-01",
-      summary: "يشتكي العميل من ان التكيف بارد جدا	",
-      Department: "MECH",
-    },
-    {
-      id: 7,
-      SR_ID: "SR-18",
-      status: "Closed",
-      type: "WO",
-      date: "2025-01-02",
-      summary: "فصل نظام ال UPS في كلاستر السعداء لتسليم النظام للاستشاري	",
-      Department: "ELEC",
-    },
-    {
-      id: 8,
-      SR_ID: "SR-19",
-      status: "INPROG",
-      type: "SR",
-      date: "2025-01-03",
-      summary: "اسبوت به اضطراب في الاناره في جناح الوزير	",
-      Department: "ELEC",
-    },
-    {
-      id: 9,
-      SR_ID: "SR-20",
-      status: "Open",
-      type: "WO",
-      date: "2025-01-04",
-      summary: "بطاريات لا تعمل في لوحه Esi Check	",
-      Department: "ELEC",
-    },
-    {
-      id: 10,
-      SR_ID: "SR-21",
-      status: "Rejected",
-      type: "SR",
-      date: "2025-01-05",
-      summary: "انقطاع التيار عن لوحه ELP-L2B-Serv	",
-      Department: "ELEC",
+      id: "WO-6455",
+      status: "CLOSED",
+      createdAt: "2025-05-29 09:00",
+      asset: "EXFA-030",
+      location: "02-TRAF-F090",
+      department: "MECH HVAC",
+      description: "Mechanical HVAC",
     },
   ];
 
+  const serviceRequests = [
+    {
+      id: "SR-1201",
+      status: "OPEN",
+      createdAt: "2025-05-26 09:15",
+      asset: "UPS-01",
+      location: "Cluster A",
+      department: "ELEC",
+      description: "Electrical",
+    },
+    {
+      id: "SR-1202",
+      status: "REJECTED",
+      createdAt: "2025-05-26 14:30",
+      asset: "ELP-L2B",
+      location: "Panel Room",
+      department: "ELEC",
+      description: "Electrical",
+    },
+  ];
+
+  /* ================= State ================= */
+
   const [activeTab, setActiveTab] = useState("WO");
   const [showModal, setShowModal] = useState(false);
-  const [showMenu, setShowMenu] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
 
-  const handleSignOut = () => {
-    navigation.replace("Login");
+  /* ================= Helpers ================= */
+
+  const statusColors = {
+    ACTIVE: "#1e7f5c",
+    OPEN: "#0d6efd",
+    INPROG: "#ff9800",
+    CLOSED: "#6c757d",
+    REJECTED: "#dc3545",
   };
+
+  const sourceData =
+    activeTab === "WO" ? workOrders : serviceRequests;
+
+  /* ================= Search + Filter ================= */
+
+  const filteredData = useMemo(() => {
+    return sourceData.filter((item) => {
+      const keyword = searchText.toLowerCase();
+
+      const matchSearch =
+        item.id.toLowerCase().includes(keyword) ||
+        item.asset.toLowerCase().includes(keyword) ||
+        item.location.toLowerCase().includes(keyword);
+
+      const matchStatus =
+        statusFilter === "ALL" || item.status === statusFilter;
+
+      return matchSearch && matchStatus;
+    });
+  }, [sourceData, searchText, statusFilter]);
+
+  /* ================= Pagination ================= */
+
+  const paginatedData = filteredData.slice(
+    0,
+    page * PAGE_SIZE
+  );
+
+  const canLoadMore = paginatedData.length < filteredData.length;
+
+  /* ================= Card ================= */
+
+  const renderCard = ({ item }) => (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.idText}>
+          {activeTab} : {item.id}
+        </Text>
+
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: statusColors[item.status] + "20" },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              { color: statusColors[item.status] },
+            ]}
+          >
+            {item.status}
+          </Text>
+        </View>
+      </View>
+
+      <Text style={styles.reviewText}>
+        {activeTab === "WO"
+          ? "SR needs review."
+          : "Service request details."}
+      </Text>
+
+      <InfoRow icon="calendar-today" text={item.createdAt} />
+      <InfoRow icon="build" text={`Asset: ${item.asset}`} />
+      <InfoRow icon="place" text={`Location: ${item.location}`} />
+      <InfoRow icon="engineering" text={`Dept: ${item.department}`} />
+      <InfoRow icon="settings" text={item.description} />
+
+      <TouchableOpacity style={styles.button}>
+        <Text style={styles.buttonText}>View Details</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ===== Top Header + Menu ===== */}
+      {/* ===== Header ===== */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
+      </View>
 
-        <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
-          <MaterialIcons name="account-circle" size={35} color="#fff" />
-        </TouchableOpacity>
+      {/* ===== Search ===== */}
+      <View style={styles.searchBox}>
+        <MaterialIcons name="search" size={22} color="#888" />
+        <TextInput
+          placeholder="Search by ID, Asset, Location"
+          value={searchText}
+          onChangeText={(t) => {
+            setSearchText(t);
+            setPage(1);
+          }}
+          style={styles.searchInput}
+        />
+      </View>
 
-        {showMenu && (
-          <View style={styles.menuBox}>
+      {/* ===== Filter ===== */}
+      <View style={styles.filterRow}>
+        {["ALL", "ACTIVE", "OPEN", "INPROG", "CLOSED", "REJECTED"].map(
+          (status) => (
             <TouchableOpacity
-              style={styles.menuItem}
+              key={status}
+              style={[
+                styles.filterBtn,
+                statusFilter === status && styles.filterBtnActive,
+              ]}
               onPress={() => {
-                setShowMenu(false);
-                navigation.navigate("Profile");
+                setStatusFilter(status);
+                setPage(1);
               }}
             >
-              <MaterialIcons name="person" size={22} color="#063776" />
-              <Text style={styles.menuText}>Profile</Text>
+              <Text
+                style={[
+                  styles.filterText,
+                  statusFilter === status &&
+                    styles.filterTextActive,
+                ]}
+              >
+                {status}
+              </Text>
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMenu(false);
-                navigation.navigate("Options");
-              }}
-            >
-              <MaterialIcons name="settings" size={22} color="#063776" />
-              <Text style={styles.menuText}>Options</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setShowMenu(false);
-                handleSignOut();
-              }}
-            >
-              <MaterialIcons name="logout" size={22} color="red" />
-              <Text style={[styles.menuText, { color: "red" }]}>Sign Out</Text>
-            </TouchableOpacity>
-          </View>
+          )
         )}
       </View>
 
-      {/* ===== Top Partitions ===== */}
+      {/* ===== Tabs ===== */}
       <View style={styles.partitionContainer}>
         <TouchableOpacity
           style={[
             styles.partition,
             activeTab === "WO" && styles.activePartition,
           ]}
-          onPress={() => setActiveTab("WO")}
+          onPress={() => {
+            setActiveTab("WO");
+            setPage(1);
+          }}
         >
-          <Text
-            style={[
-              styles.partitionTitle,
-              activeTab === "WO" && styles.activePartitionTitle,
-            ]}
-          >
-            Work Orders
-          </Text>
-          <Text
-            style={[
-              styles.partitionNumber,
-              activeTab === "WO" && styles.activePartitionNumber,
-            ]}
-          >
-            24
-          </Text>
+          <Text style={styles.partitionTitle}>Work Orders</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -193,119 +229,94 @@ export default function HomeScreen({ navigation }) {
             styles.partition,
             activeTab === "SR" && styles.activePartition,
           ]}
-          onPress={() => setActiveTab("SR")}
+          onPress={() => {
+            setActiveTab("SR");
+            setPage(1);
+          }}
         >
-          <Text
-            style={[
-              styles.partitionTitle,
-              activeTab === "SR" && styles.activePartitionTitle,
-            ]}
-          >
-            Service Requests
-          </Text>
-          <Text
-            style={[
-              styles.partitionNumber,
-              activeTab === "SR" && styles.activePartitionNumber,
-            ]}
-          >
-            18
-          </Text>
+          <Text style={styles.partitionTitle}>Service Requests</Text>
         </TouchableOpacity>
       </View>
 
-      {/* ===== Content ===== */}
-      <View style={styles.content}>
-        {activeTab === "WO" ? (
-          <Text style={styles.contentText}>Work Orders Content Here</Text>
-        ) : (
-          <FlatList
-            data={tableDataSR}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => <RequestCard item={item} />}
-            contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
-          />
-        )}
-      </View>
+      {/* ===== List ===== */}
+      <FlatList
+        data={paginatedData}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCard}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        ListFooterComponent={
+          canLoadMore && (
+            <TouchableOpacity
+              style={styles.loadMoreBtn}
+              onPress={() => setPage((p) => p + 1)}
+            >
+              <Text style={styles.loadMoreText}>Load More</Text>
+            </TouchableOpacity>
+          )
+        }
+      />
 
-      {/* ===== Bottom Navigation ===== */}
-      <View style={styles.bottomNav}>
+      {/* ===== Footer ===== */}
+      <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => setActiveTab("WO")}
+          style={styles.footerItem}
+          onPress={() => {
+            setActiveTab("WO");
+            setPage(1);
+          }}
         >
           <MaterialIcons
-            name="build"
-            size={28}
+            name="settings"
+            size={26}
             color={activeTab === "WO" ? "#063776" : "#999"}
           />
           <Text
-            style={[styles.navText, activeTab === "WO" && styles.navTextActive]}
+            style={[
+              styles.footerText,
+              activeTab === "WO" && styles.footerTextActive,
+            ]}
           >
             Work Orders
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.floatingButton}
+          style={styles.fab}
           onPress={() => setShowModal(true)}
         >
-          <MaterialIcons
-            name="add"
-            size={34}
-            color="#fff"
-            style={styles.addIcon}
-          />
+          <MaterialIcons name="add" size={32} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.navButton}
-          onPress={() => setActiveTab("SR")}
+          style={styles.footerItem}
+          onPress={() => {
+            setActiveTab("SR");
+            setPage(1);
+          }}
         >
           <MaterialIcons
             name="assignment"
-            size={28}
+            size={26}
             color={activeTab === "SR" ? "#063776" : "#999"}
           />
           <Text
-            style={[styles.navText, activeTab === "SR" && styles.navTextActive]}
+            style={[
+              styles.footerText,
+              activeTab === "SR" && styles.footerTextActive,
+            ]}
           >
             Service Requests
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* ===== Modal Create ===== */}
+      {/* ===== Modal ===== */}
       <Modal transparent visible={showModal} animationType="fade">
         <View style={styles.modalBackground}>
           <View style={styles.modalBox}>
             <Text style={styles.modalTitle}>Create New</Text>
-
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => {
-                setShowModal(false);
-                navigation.navigate("CreateSR");
-              }}
-            >
-              <Text style={styles.modalButtonText}>Create Service Request</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => {
-                setShowModal(false);
-                navigation.navigate("CreateWO");
-              }}
-            >
-              <Text style={styles.modalButtonText}>Create Work Order</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setShowModal(false)}
-            >
-              <Text style={styles.cancelText}>Cancel</Text>
+            <TouchableOpacity onPress={() => setShowModal(false)}>
+              <Text style={{ color: "red", marginTop: 10 }}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -314,139 +325,152 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-/* ==================== Styles ==================== */
+/* ================= Small Component ================= */
+
+const InfoRow = ({ icon, text }) => (
+  <View style={styles.row}>
+    <MaterialIcons name={icon} size={16} color="#777" />
+    <Text style={styles.rowText}>{text}</Text>
+  </View>
+);
+
+/* ================= Styles ================= */
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f5f6fa" },
 
-  /* Header */
-  header: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 15,
-    backgroundColor: "#063776",
+  header: { padding: 20, backgroundColor: "#063776" },
+  headerTitle: { color: "#fff", fontSize: 22, fontWeight: "700" },
+
+  searchBox: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    elevation: 0, // ❗ عطل تأثير الرفع
-    zIndex: 1,
-    marginBottom: 30, // ❗ خلّيه تحت المنيو
-  },
-
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    // color: "#063776",
-    color: "#fff",
-  },
-
-  /* Dropdown Menu */
-  menuBox: {
-    position: "absolute",
-    right: 20,
-    top: 80,
-    width: 180,
-    backgroundColor: "#fff", // غامق مودرن
+    backgroundColor: "#fff",
+    margin: 15,
+    paddingHorizontal: 12,
     borderRadius: 12,
-    paddingVertical: 8,
-    zIndex: 99999, // أعلى من أي شيء
-    elevation: 50, // أعلى Priority على أندرويد
-    boxShadowColor: "#000",
-    boxShadowOpacity: 0.35,
-    boxShadowRadius: 10,
-    boxShadowOffset: { width: 0, height: 4 },
-  },
-  menuItem: {
-    flexDirection: "row",
-    padding: 12,
-    alignItems: "center",
   },
 
-  menuText: {
-    marginLeft: 10,
-    fontSize: 15,
-    color: "#063776",
+  searchInput: { flex: 1, padding: 10 },
+
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 10,
   },
 
-  /* Partitions */
-  partitionContainer: {
-    flexDirection: "row",
-    padding: 15,
-    justifyContent: "space-between",
+  filterBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    margin: 4,
+    borderRadius: 20,
+    backgroundColor: "#e0e0e0",
   },
+
+  filterBtnActive: { backgroundColor: "#063776" },
+  filterText: { fontSize: 12 },
+  filterTextActive: { color: "#fff", fontWeight: "700" },
+
+  partitionContainer: { flexDirection: "row", padding: 15 },
 
   partition: {
     flex: 1,
-    backgroundColor: "#063776",
-    padding: 20,
+    padding: 15,
     borderRadius: 15,
+    backgroundColor: "#ddd",
     marginHorizontal: 5,
     alignItems: "center",
-    elevation: 3,
-    color: "#fff",
   },
 
-  activePartition: {
-    borderColor: "#063776",
-    borderWidth: 2,
+  activePartition: { backgroundColor: "#063776" },
+  partitionTitle: { color: "#fff", fontWeight: "700" },
+
+  card: {
     backgroundColor: "#fff",
-    color: "#063776",
-  },
-  partitionTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#063776",
-    color: "#fff",
-  },
-  activePartitionTitle: {
-    color: "#063776",
-  },
-  activePartitionNumber: {
-    color: "#063776",
-  },
-  partitionNumber: {
-    marginTop: 6,
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#fff",
+    borderRadius: 15,
+    padding: 16,
+    margin: 16,
+    elevation: 3,
   },
 
-  /* Content */
-  content: {
-    flex: 1,
-    justifyContent: "center",
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  idText: { fontWeight: "700", color: "#063776" },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
+
+  statusText: { fontSize: 12, fontWeight: "700" },
+
+  reviewText: { color: "#777", marginVertical: 6 },
+
+  row: { flexDirection: "row", alignItems: "center", marginTop: 6 },
+  rowText: { marginLeft: 8 },
+
+  button: {
+    marginTop: 12,
+    backgroundColor: "#063776",
+    padding: 10,
+    borderRadius: 10,
     alignItems: "center",
   },
 
-  contentText: { fontSize: 18, color: "#444" },
+  buttonText: { color: "#fff", fontWeight: "700" },
 
-  /* Bottom Nav */
-  bottomNav: {
+  loadMoreBtn: {
+    backgroundColor: "#063776",
+    padding: 12,
+    margin: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  loadMoreText: { color: "#fff", fontWeight: "700" },
+
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     height: 70,
+    backgroundColor: "#fff",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 25,
-    backgroundColor: "#fff",
-    elevation: 10,
+    paddingHorizontal: 40,
+    elevation: 15,
   },
 
-  navButton: { alignItems: "center" },
-  navText: { fontSize: 12, color: "#888", marginTop: 4 },
-  navTextActive: { color: "#063776", fontWeight: "700" },
+  footerItem: { alignItems: "center" },
 
-  /* Floating Create Button */
-  floatingButton: {
-    width: 45,
-    height: 45,
+  footerText: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
+  },
+
+  footerTextActive: {
+    color: "#063776",
+    fontWeight: "700",
+  },
+
+  fab: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#063776",
-    borderRadius: 40,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: -40,
-    elevation: 8,
+    marginTop: -35,
+    elevation: 20,
   },
 
-  /* Modal */
   modalBackground: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -462,18 +486,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  modalTitle: { fontSize: 17, fontWeight: "700", marginBottom: 15 },
-
-  modalButton: {
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#063776",
-    borderRadius: 10,
-    marginVertical: 6,
-  },
-
-  modalButtonText: { color: "#fff", fontSize: 16, textAlign: "center" },
-
-  cancelButton: { marginTop: 10 },
-  cancelText: { fontSize: 16, color: "#ff0000", fontWeight: "600" },
+  modalTitle: { fontWeight: "700", fontSize: 17 },
 });
